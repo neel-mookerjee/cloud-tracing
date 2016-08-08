@@ -1,0 +1,4 @@
+include ':cloud-client-context'
+include ':cloud-tracing-http'
+
+include ':cloud-tracing-sample-rest-app'

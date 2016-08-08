@@ -1,0 +1,70 @@
+apply plugin: "application"
+apply plugin: "java"
+apply plugin: "maven"
+apply plugin: "eclipse"
+apply plugin: "idea"
+
+task makePretty(type: Delete) {
+    delete "repo"
+}
+clean.dependsOn makePretty
+
+allprojects {
+    version = "1.0.0-SNAPSHOT"
+    task hello << { task -> println "Preparing $task.project.name" }
+}
+
+subprojects {
+    apply plugin: "java"
+    tasks.withType(Jar) {
+        destinationDir = file("$rootDir/repo/local")
+    }
+
+    javadoc << {
+        File marker = file("${destinationDir}/Staticfile")
+        marker.createNewFile()
+    }
+}
+
+task copyJar() {
+    copy {
+        from "$rootDir/repo/local"
+        into "$rootDir/repo/artifactory"
+        include "*.original"
+        include "*.pom"
+        exclude "*-sample-*"
+        rename { String fileName ->
+            fileName.replace(".original", "")
+        }
+    }
+    delete fileTree("$rootDir/repo/local") {
+        include "*.original", "*.pom"
+    }
+}
+build.finalizedBy copyJar
+
+jar {
+    baseName = "cloud-tracing"
+}
+
+description = "Cloud Tracing"
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+mainClassName = "cloud.tracing.demo.DemoApplication"
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // not required
+    //compile project(":cloud-tracing")
+    //compile project(":cloud-tracing-sample-log-app")
+}
